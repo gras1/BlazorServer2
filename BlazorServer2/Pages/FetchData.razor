@@ -1,0 +1,74 @@
+﻿@page "/fetchdata/{username}"
+
+@inject Data.IGitHubUserSearchService gitHubUserSearchService
+
+@if (gitHubUser == null)
+{
+    <p><em>Loading...</em></p>
+}
+else if (gitHubUser.UserFound)
+{
+    <div class="row">
+        <div class="col-md-8">
+            <h2 class="display-4">@gitHubUser.login</h2>
+            <p class="lead mb-0">@gitHubUser.location</p>
+        </div>
+        <div class="col-md-4 text-right">
+            <img src="@gitHubUser.avatar_url" alt="Avatar" class="img-thumbnail mb-4" style="width:150px; height:150px;" />
+        </div>
+
+        <div class="col-12">
+            <div class="row">
+                @if (gitHubUser.GitHubRepos != null)
+                {
+                    @foreach (var gitHubRepo in gitHubUser.GitHubRepos)
+                    {
+                        <div class="col-12 col-sm-6">
+                            <div class="card mb-2">
+                                <div class="card-body">
+                                    <h5 class="card-title">@gitHubRepo.name</h5>
+                                    <p class="card-text">
+                                        <a href="@gitHubRepo.html_url" title="Repository URL" target="_blank">@gitHubRepo.html_url</a>
+                                    </p>
+                                    <i class="fas fa-star"></i> @gitHubRepo.stargazers_count
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+}
+else if (!gitHubUser.UserFound && string.IsNullOrEmpty(gitHubUser.ErrorMessage))
+{
+    <div class="row">
+        <div class="col-12">
+            <div class="row">
+                <h2 class="display-4 error">The user couldn't be found</h2>
+            </div>
+        </div>
+    </div>
+}
+else if (!gitHubUser.UserFound && !string.IsNullOrEmpty(gitHubUser.ErrorMessage))
+{
+    <div class="row">
+        <div class="col-12">
+            <div class="row">
+                <h2 class="display-4 error">@gitHubUser.ErrorMessage</h2>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    GitHubUser gitHubUser;
+
+    [Parameter]
+    public string username { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        gitHubUser = await gitHubUserSearchService.GetGitHubUser(username);
+    }
+}
